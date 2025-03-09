@@ -24,8 +24,7 @@ def hazel_cry():
     print('hazel wants to cry T^T')
 
 # main function for running protein generation
-@hydra.main(version_base=None, config_path="config/inference", config_name="base")
-def main(conf: HydraConfig) -> None:
+def diffusion_process(conf: OmegaConf) -> None:
     log = logging.getLogger(__name__)
     if conf.inference.deterministic:
         make_deterministic()
@@ -195,7 +194,3 @@ def main(conf: HydraConfig) -> None:
             )
 
         log.info(f"Finished design in {(time.time()-start_time)/60:.2f} minutes")
-
-
-if __name__ == "__main__":
-    main()
