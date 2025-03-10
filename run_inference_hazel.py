@@ -20,9 +20,6 @@ def make_deterministic(seed=0):
     np.random.seed(seed)
     random.seed(seed)
 
-def hazel_cry():
-    print('hazel wants to cry T^T')
-
 # main function for running protein generation
 def diffusion_process(conf: OmegaConf) -> None:
     log = logging.getLogger(__name__)
@@ -49,6 +46,7 @@ def diffusion_process(conf: OmegaConf) -> None:
 
     # iterate over number of designs it needs to generate
     for i_des in range(design_startnum, design_startnum + sampler.inf_conf.num_designs):
+        # each design generation FUNCTION
         if conf.inference.deterministic:
             make_deterministic(i_des)
 
@@ -76,6 +74,7 @@ def diffusion_process(conf: OmegaConf) -> None:
         for num,t in enumerate(range(int(sampler.t_step_input), sampler.inf_conf.final_step - 1, -1)):
             
             # single diffusion step
+            # each TIMESTEP FUNCTION
             px0, x_t, seq_t, plddt = sampler.sample_step(
                 t=t, x_t=x_t, seq_init=seq_t, final_step=sampler.inf_conf.final_step
             )
