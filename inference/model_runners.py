@@ -190,12 +190,12 @@ class Sampler:
         overrides = []
         if HydraConfig.initialized():
             overrides = HydraConfig.get().overrides.task
-        print("Assembling -model, -diffuser and -preprocess configs from checkpoint")
+        # print("Assembling -model, -diffuser and -preprocess configs from checkpoint")
 
         for cat in ['model','diffuser','preprocess']:
             for key in self._conf[cat]:
                 try:
-                    print(f"USING MODEL CONFIG: self._conf[{cat}][{key}] = {self.ckpt['config_dict'][cat][key]}")
+                    # print(f"USING MODEL CONFIG: self._conf[{cat}][{key}] = {self.ckpt['config_dict'][cat][key]}")
                     self._conf[cat][key] = self.ckpt['config_dict'][cat][key]
                 except:
                     pass
