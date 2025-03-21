@@ -23,6 +23,42 @@ class Potential:
         '''
         raise NotImplementedError('Potential compute function was not overwritten')
 
+class combined_docking_potential(Potential):
+    '''
+        A potential that combines the docking score with binder_ncontacts.
+    '''
+
+    def __init__(self, binderlen, weight_docking=1.0, weight_ncontacts=1.0, r_0=8, d_0=4):
+        self.weight_docking = weight_docking
+        self.weight_ncontacts = weight_ncontacts
+        self.binder_ncontacts = binder_ncontacts(binderlen, weight=1.0, r_0=r_0, d_0=d_0)
+
+    def compute(self, xyz, docking_score):
+        '''
+            Compute the combined potential.
+
+            Args:
+                xyz (torch.Tensor): Tensor of shape [L, 27, 3] representing the coordinates of the protein.
+                docking_score (torch.Tensor): Tensor of shape [1] representing the docking score predicted by the neural network.
+
+            Returns:
+                torch.Tensor: The combined potential value (scalar tensor).
+        '''
+        # Ensure docking_score is a scalar tensor
+        if docking_score.dim() > 0:
+            docking_score = docking_score.squeeze()
+
+        # Compute the docking score potential
+        docking_potential = -self.weight_docking * docking_score
+
+        # Compute the binder_ncontacts potential
+        ncontacts_potential = self.binder_ncontacts.compute(xyz)
+
+        # Combine the potentials
+        combined_potential = docking_potential + self.weight_ncontacts * ncontacts_potential
+
+        return combined_potential
+
 class surrogate_docking_score(Potential):
     '''
         Docking score of Previous Timestep to encourage more negative docking score
@@ -734,7 +770,8 @@ implemented_potentials = { 'monomer_ROG':          monomer_ROG,
                            'olig_intra_contacts':  olig_intra_contacts,
                            'olig_contacts':        olig_contacts,
                            'substrate_contacts':    substrate_contacts,
-                           'surrogate_docking_score':   surrogate_docking_score,}
+                           'surrogate_docking_score':   surrogate_docking_score,
+                           'combined_docking_potential': combined_docking_potential}
 
 require_binderlen      = { 'binder_ROG',
                            'binder_distance_ReLU',
@@ -742,7 +779,8 @@ require_binderlen      = { 'binder_ROG',
                            'dimer_ROG',
                            'binder_ncontacts',
                            'dimer_ncontacts',
-                           'interface_ncontacts'}
+                           'interface_ncontacts',
+                           'combined_docking_potential'}
 
 require_hotspot_res    = { 'binder_distance_ReLU',
                            'binder_any_ReLU' }
