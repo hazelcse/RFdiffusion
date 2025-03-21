@@ -31,7 +31,8 @@ class combined_docking_potential(Potential):
     def __init__(self, binderlen, weight_docking=1.0, weight_ncontacts=1.0, r_0=8, d_0=4):
         self.weight_docking = weight_docking
         self.weight_ncontacts = weight_ncontacts
-        self.binder_ncontacts = binder_ncontacts(binderlen, weight=1.0, r_0=r_0, d_0=d_0)
+        # Initialize binder_ncontacts with the correct arguments
+        self.binder_ncontacts = binder_ncontacts(binderlen=binderlen, weight=weight_ncontacts, r_0=r_0, d_0=d_0)
 
     def compute(self, xyz, docking_score):
         '''
