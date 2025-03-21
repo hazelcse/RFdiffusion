@@ -709,6 +709,7 @@ class SelfConditioning(Sampler):
         else:
             x_t_1 = torch.clone(px0).to(x_t.device)
             px0 = px0.to(x_t.device)
+            xyz_clone = None
 
         ######################
         ### Apply symmetry ###
