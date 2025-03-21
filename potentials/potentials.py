@@ -736,7 +736,8 @@ implemented_potentials = { 'monomer_ROG':          monomer_ROG,
                            'monomer_contacts':     monomer_contacts,
                            'olig_intra_contacts':  olig_intra_contacts,
                            'olig_contacts':        olig_contacts,
-                           'substrate_contacts':    substrate_contacts}
+                           'substrate_contacts':    substrate_contacts,
+                           'surrogate_docking_score':   surrogate_docking_score,}
 
 require_binderlen      = { 'binder_ROG',
                            'binder_distance_ReLU',
