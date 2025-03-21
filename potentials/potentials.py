@@ -34,10 +34,7 @@ class surrogate_docking_score(Potential):
     
     def compute(self, xyz, docking_score):
         print('computing docking score potential')
-        if docking_score:
-            return -1 * self.weight * docking_score
-        else:
-            return -1 * self.weight * -4
+        return -1 * self.weight * docking_score
 
 class monomer_ROG(Potential):
     '''
