@@ -501,6 +501,9 @@ class Denoise:
         # Apply gradient step from guiding potentials
         # This can be moved to below where the full atom representation is calculated to allow for potentials involving sidechains
 
+        # remove later
+        print(xt.clone())
+
         grad_ca = self.get_potential_gradients(
             xt.clone(), diffusion_mask=diffusion_mask,
             docking_score = docking_score
