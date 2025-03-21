@@ -546,7 +546,7 @@ class Sampler:
 
         return msa_masked, msa_full, seq[None], torch.squeeze(xyz_t, dim=0), idx, t1d, t2d, xyz_t, alpha_t
         
-    def sample_step(self, *, t, x_t, seq_init, final_step, docking_score):
+    def sample_step(self, *, t, x_t, seq_init, final_step):
         '''Generate the next pose that the model should be supplied at timestep t-1.
 
         Args:
@@ -554,7 +554,6 @@ class Sampler:
             seq_t (torch.tensor): (L,22) The sequence at the beginning of this timestep
             x_t (torch.tensor): (L,14,3) The residue positions at the beginning of this timestep
             seq_init (torch.tensor): (L,22) The initialized sequence used in updating the sequence.
-            docking_score (float): Scalar value of Previous Timestep's Docking Score
             
         Returns:
             px0: (L,14,3) The model's prediction of x0.
@@ -607,8 +606,7 @@ class Sampler:
                 px0=px0,
                 t=t,
                 diffusion_mask=self.mask_str.squeeze(),
-                align_motif=self.inf_conf.align_motif,
-                docking_score=docking_score
+                align_motif=self.inf_conf.align_motif
             )
         else:
             x_t_1 = torch.clone(px0).to(x_t.device)
@@ -627,7 +625,7 @@ class SelfConditioning(Sampler):
     pX0[t+1] is provided as a template input to the model at time t
     """
 
-    def sample_step(self, *, t, x_t, seq_init, final_step, docking_score):
+    def sample_step(self, *, t, x_t, seq_init, final_step):
         '''
         Generate the next pose that the model should be supplied at timestep t-1.
         Args:
@@ -635,7 +633,6 @@ class SelfConditioning(Sampler):
             seq_t (torch.tensor): (L,22) The sequence at the beginning of this timestep
             x_t (torch.tensor): (L,14,3) The residue positions at the beginning of this timestep
             seq_init (torch.tensor): (L,22) The initialized sequence used in updating the sequence.
-            docking_score (float): Scalar value of Previous Timestep's Docking Score
         Returns:
             px0: (L,14,3) The model's prediction of x0.
             x_t_1: (L,14,3) The updated positions of the next step.
@@ -705,9 +702,8 @@ class SelfConditioning(Sampler):
                 t=t,
                 diffusion_mask=self.mask_str.squeeze(),
                 align_motif=self.inf_conf.align_motif,
-                include_motif_sidechains=self.preprocess_conf.motif_sidechain_input,
-                docking_score=docking_score
-            )
+                include_motif_sidechains=self.preprocess_conf.motif_sidechain_input
+                )
             self._log.info(
                     f'Timestep {t}, input to next step: { seq2chars(torch.argmax(seq_t_1, dim=-1).tolist())}')
         else:

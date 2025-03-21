@@ -7,71 +7,19 @@ class Potential:
         Interface class that defines the functions a potential must implement
     '''
 
-    def compute(self, xyz, docking_score):
+    def compute(self, xyz):
         '''
             Given the current structure of the model prediction, return the current
             potential as a PyTorch tensor with a single entry
 
             Args:
                 xyz (torch.tensor, size: [L,27,3]: The current coordinates of the sample
-
-                docking_score: The docking score of the previous timestep
             
             Returns:
                 potential (torch.tensor, size: [1]): A potential whose value will be MAXIMIZED
                                                      by taking a step along its gradient
         '''
         raise NotImplementedError('Potential compute function was not overwritten')
-
-class combined_docking_potential(Potential):
-    '''
-        A potential that combines the docking score with binder_ncontacts.
-    '''
-
-    def __init__(self, binderlen, weight_docking=1.0, weight_ncontacts=1.0, r_0=8, d_0=4):
-        self.weight_docking = weight_docking
-        self.weight_ncontacts = weight_ncontacts
-        # Initialize binder_ncontacts with the correct arguments
-        self.binder_ncontacts = binder_ncontacts(binderlen=binderlen, weight=weight_ncontacts, r_0=r_0, d_0=d_0)
-
-    def compute(self, xyz, docking_score):
-        '''
-            Compute the combined potential.
-
-            Args:
-                xyz (torch.Tensor): Tensor of shape [L, 27, 3] representing the coordinates of the protein.
-                docking_score (torch.Tensor): Tensor of shape [1] representing the docking score predicted by the neural network.
-
-            Returns:
-                torch.Tensor: The combined potential value (scalar tensor).
-        '''
-        # Ensure docking_score is a scalar tensor
-        if docking_score.dim() > 0:
-            docking_score = docking_score.squeeze()
-
-        # Compute the docking score potential
-        docking_potential = -self.weight_docking * docking_score
-
-        # Compute the binder_ncontacts potential
-        ncontacts_potential = self.binder_ncontacts.compute(xyz)
-
-        # Combine the potentials
-        combined_potential = docking_potential + self.weight_ncontacts * ncontacts_potential
-
-        return combined_potential
-
-class surrogate_docking_score(Potential):
-    '''
-        Docking score of Previous Timestep to encourage more negative docking score
-    '''
-
-    def __init__(self, weight=1):
-
-        self.weight   = weight
-    
-    def compute(self, xyz, docking_score):
-        print('computing docking score potential')
-        return -1 * self.weight * docking_score
 
 class monomer_ROG(Potential):
     '''
@@ -85,7 +33,7 @@ class monomer_ROG(Potential):
         self.weight   = weight
         self.min_dist = min_dist
 
-    def compute(self, xyz, docking_score):
+    def compute(self, xyz):
         Ca = xyz[:,1] # [L,3]
 
         centroid = torch.mean(Ca, dim=0, keepdim=True) # [1,3]
@@ -111,7 +59,7 @@ class binder_ROG(Potential):
         self.min_dist  = min_dist
         self.weight    = weight
 
-    def compute(self, xyz, docking_score):
+    def compute(self, xyz):
         
         # Only look at binder residues
         Ca = xyz[:self.binderlen,1] # [Lb,3]
@@ -141,7 +89,7 @@ class dimer_ROG(Potential):
         self.min_dist  = min_dist
         self.weight    = weight
 
-    def compute(self, xyz, docking_score):
+    def compute(self, xyz):
 
         # Only look at monomer 1 residues
         Ca_m1 = xyz[:self.binderlen,1] # [Lb,3]
@@ -182,7 +130,7 @@ class binder_ncontacts(Potential):
         self.weight    = weight
         self.d_0       = d_0
 
-    def compute(self, xyz, docking_score):
+    def compute(self, xyz):
 
         # Only look at binder Ca residues
         Ca = xyz[:self.binderlen,1] # [Lb,3]
@@ -217,7 +165,7 @@ class dimer_ncontacts(Potential):
         self.weight    = weight
         self.d_0       = d_0
 
-    def compute(self, xyz, docking_score):
+    def compute(self, xyz):
 
         # Only look at binder Ca residues
         Ca = xyz[:self.binderlen,1] # [Lb,3]
@@ -262,7 +210,7 @@ class interface_ncontacts(Potential):
         self.weight    = weight
         self.d_0       = d_0
 
-    def compute(self, xyz, docking_score):
+    def compute(self, xyz):
 
         # Extract binder Ca residues
         Ca_b = xyz[:self.binderlen,1] # [Lb,3]
@@ -770,9 +718,7 @@ implemented_potentials = { 'monomer_ROG':          monomer_ROG,
                            'monomer_contacts':     monomer_contacts,
                            'olig_intra_contacts':  olig_intra_contacts,
                            'olig_contacts':        olig_contacts,
-                           'substrate_contacts':    substrate_contacts,
-                           'surrogate_docking_score':   surrogate_docking_score,
-                           'combined_docking_potential': combined_docking_potential}
+                           'substrate_contacts':    substrate_contacts}
 
 require_binderlen      = { 'binder_ROG',
                            'binder_distance_ReLU',
@@ -780,8 +726,7 @@ require_binderlen      = { 'binder_ROG',
                            'dimer_ROG',
                            'binder_ncontacts',
                            'dimer_ncontacts',
-                           'interface_ncontacts',
-                           'combined_docking_potential'}
+                           'interface_ncontacts'}
 
 require_hotspot_res    = { 'binder_distance_ReLU',
                            'binder_any_ReLU' }
