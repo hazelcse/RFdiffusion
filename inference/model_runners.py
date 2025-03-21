@@ -546,7 +546,7 @@ class Sampler:
 
         return msa_masked, msa_full, seq[None], torch.squeeze(xyz_t, dim=0), idx, t1d, t2d, xyz_t, alpha_t
         
-    def sample_step(self, *, t, x_t, seq_init, final_step):
+    def sample_step(self, *, t, x_t, seq_init, final_step, docking_score):
         '''Generate the next pose that the model should be supplied at timestep t-1.
 
         Args:
@@ -554,6 +554,7 @@ class Sampler:
             seq_t (torch.tensor): (L,22) The sequence at the beginning of this timestep
             x_t (torch.tensor): (L,14,3) The residue positions at the beginning of this timestep
             seq_init (torch.tensor): (L,22) The initialized sequence used in updating the sequence.
+            docking_score (float): Scalar value of Previous Timestep's Docking Score
             
         Returns:
             px0: (L,14,3) The model's prediction of x0.
@@ -606,7 +607,8 @@ class Sampler:
                 px0=px0,
                 t=t,
                 diffusion_mask=self.mask_str.squeeze(),
-                align_motif=self.inf_conf.align_motif
+                align_motif=self.inf_conf.align_motif,
+                docking_score=docking_score
             )
         else:
             x_t_1 = torch.clone(px0).to(x_t.device)

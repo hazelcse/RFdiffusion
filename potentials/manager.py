@@ -171,12 +171,12 @@ class PotentialManager:
 
         return to_apply
 
-    def compute_all_potentials(self, xyz):
+    def compute_all_potentials(self, xyz, docking_score):
         '''
             This is the money call. Take the current sequence and structure information and get the sum of all of the potentials that are being used
         '''
 
-        potential_list = [potential.compute(xyz) for potential in self.potentials_to_apply]
+        potential_list = [potential.compute(xyz, docking_score) for potential in self.potentials_to_apply]
         potential_stack = torch.stack(potential_list, dim=0)
 
         return torch.sum(potential_stack, dim=0)

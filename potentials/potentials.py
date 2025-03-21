@@ -7,19 +7,37 @@ class Potential:
         Interface class that defines the functions a potential must implement
     '''
 
-    def compute(self, xyz):
+    def compute(self, xyz, docking_score):
         '''
             Given the current structure of the model prediction, return the current
             potential as a PyTorch tensor with a single entry
 
             Args:
                 xyz (torch.tensor, size: [L,27,3]: The current coordinates of the sample
+
+                docking_score: The docking score of the previous timestep
             
             Returns:
                 potential (torch.tensor, size: [1]): A potential whose value will be MAXIMIZED
-                                                     by taking a step along it's gradient
+                                                     by taking a step along its gradient
         '''
         raise NotImplementedError('Potential compute function was not overwritten')
+
+class surrogate_docking_score(Potential):
+    '''
+        Docking score of Previous Timestep to encourage more negative docking score
+    '''
+
+    def __init__(self, weight=1):
+
+        self.weight   = weight
+    
+    def compute(self, xyz, docking_score):
+        print('computing docking score potential')
+        if docking_score:
+            return -1 * self.weight * docking_score
+        else:
+            return -1 * self.weight * -4
 
 class monomer_ROG(Potential):
     '''
@@ -33,7 +51,7 @@ class monomer_ROG(Potential):
         self.weight   = weight
         self.min_dist = min_dist
 
-    def compute(self, xyz):
+    def compute(self, xyz, docking_score):
         Ca = xyz[:,1] # [L,3]
 
         centroid = torch.mean(Ca, dim=0, keepdim=True) # [1,3]
@@ -59,7 +77,7 @@ class binder_ROG(Potential):
         self.min_dist  = min_dist
         self.weight    = weight
 
-    def compute(self, xyz):
+    def compute(self, xyz, docking_score):
         
         # Only look at binder residues
         Ca = xyz[:self.binderlen,1] # [Lb,3]
@@ -89,7 +107,7 @@ class dimer_ROG(Potential):
         self.min_dist  = min_dist
         self.weight    = weight
 
-    def compute(self, xyz):
+    def compute(self, xyz, docking_score):
 
         # Only look at monomer 1 residues
         Ca_m1 = xyz[:self.binderlen,1] # [Lb,3]
@@ -130,7 +148,7 @@ class binder_ncontacts(Potential):
         self.weight    = weight
         self.d_0       = d_0
 
-    def compute(self, xyz):
+    def compute(self, xyz, docking_score):
 
         # Only look at binder Ca residues
         Ca = xyz[:self.binderlen,1] # [Lb,3]
@@ -165,7 +183,7 @@ class dimer_ncontacts(Potential):
         self.weight    = weight
         self.d_0       = d_0
 
-    def compute(self, xyz):
+    def compute(self, xyz, docking_score):
 
         # Only look at binder Ca residues
         Ca = xyz[:self.binderlen,1] # [Lb,3]
@@ -210,7 +228,7 @@ class interface_ncontacts(Potential):
         self.weight    = weight
         self.d_0       = d_0
 
-    def compute(self, xyz):
+    def compute(self, xyz, docking_score):
 
         # Extract binder Ca residues
         Ca_b = xyz[:self.binderlen,1] # [Lb,3]

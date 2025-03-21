@@ -375,7 +375,7 @@ class Denoise:
         return torch.Tensor(px0_)
         # return torch.tensor(xT_motif_out)
 
-    def get_potential_gradients(self, xyz, diffusion_mask):
+    def get_potential_gradients(self, xyz, diffusion_mask, docking_score=None):
         """
         This could be moved into potential manager if desired - NRB
 
@@ -384,6 +384,8 @@ class Denoise:
         Inputs:
 
             xyz (torch.tensor, required): [L,27,3] Coordinates at which the gradient will be computed
+
+            docking_score (float):
 
         Outputs:
 
@@ -401,7 +403,7 @@ class Denoise:
         if not xyz.grad is None:
             xyz.grad.zero_()
 
-        current_potential = self.potential_manager.compute_all_potentials(xyz)
+        current_potential = self.potential_manager.compute_all_potentials(xyz, docking_score)
         current_potential.backward()
 
         # Since we are not moving frames, Cb grads are same as Ca grads
@@ -427,6 +429,7 @@ class Denoise:
         fix_motif=True,
         align_motif=True,
         include_motif_sidechains=True,
+        docking_score=None,
     ):
         """
         Wrapper function to take px0, xt and t, and to produce xt-1
@@ -448,6 +451,8 @@ class Denoise:
             align_motif (bool): Align the model's prediction of the motif to the input motif
 
             include_motif_sidechains (bool): Provide sidechains of the fixed motif to the model
+
+            docking_score (float): Provides docking score of previous timestep to model
         """
 
         get_allatom = ComputeAllAtomCoords().to(device=xt.device)
@@ -497,7 +502,8 @@ class Denoise:
         # This can be moved to below where the full atom representation is calculated to allow for potentials involving sidechains
 
         grad_ca = self.get_potential_gradients(
-            xt.clone(), diffusion_mask=diffusion_mask
+            xt.clone(), diffusion_mask=diffusion_mask,
+            docking_score = docking_score
         )
 
         ca_deltas += self.potential_manager.get_guide_scale(t) * grad_ca
