@@ -696,7 +696,7 @@ class SelfConditioning(Sampler):
 
         seq_t_1 = torch.clone(seq_init)
         if t > final_step:
-            x_t_1, px0 = self.denoiser.get_next_pose(
+            x_t_1, px0, xyz_clone = self.denoiser.get_next_pose(
                 xt=x_t,
                 px0=px0,
                 t=t,
@@ -717,7 +717,7 @@ class SelfConditioning(Sampler):
         if self.symmetry is not None:
             x_t_1, seq_t_1 = self.symmetry.apply_symmetry(x_t_1, seq_t_1)
 
-        return px0, x_t_1, seq_t_1, plddt
+        return px0, x_t_1, seq_t_1, plddt, xyz_clone
 
     def symmetrise_prev_pred(self, px0, seq_in, alpha):
         """

@@ -497,9 +497,6 @@ class Denoise:
         # Apply gradient step from guiding potentials
         # This can be moved to below where the full atom representation is calculated to allow for potentials involving sidechains
 
-        # remove later
-        print(xt.clone())
-
         grad_ca = self.get_potential_gradients(
             xt.clone(), diffusion_mask=diffusion_mask
         )
@@ -517,7 +514,7 @@ class Denoise:
         if include_motif_sidechains:
             fullatom_next[:, diffusion_mask, :14] = xt[None, diffusion_mask]
 
-        return fullatom_next.squeeze()[:, :14, :], px0
+        return fullatom_next.squeeze()[:, :14, :], px0, xt.clone()
 
 
 def sampler_selector(conf: DictConfig):
