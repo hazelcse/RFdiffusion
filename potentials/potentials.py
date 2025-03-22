@@ -52,7 +52,7 @@ class docking_score(Potential):
     def __init__(self, weight=1, ligand_features=None):
         self.weight = weight
         self.ligand_features = ligand_features
-        self.surrogate_model = torch.load('surrogate_nn.pth'.eval())
+        self.surrogate_model = torch.load('surrogate_nn.pth').eval()
         print('surrogate model initialised')
 
     def compute(self, xyz):

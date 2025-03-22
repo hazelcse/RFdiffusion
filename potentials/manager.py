@@ -89,11 +89,13 @@ class PotentialManager:
                  inference_config,
                  hotspot_0idx,
                  binderlen,
+                 ligand_features
                  ):
 
         self.potentials_config = potentials_config
         self.ppi_config        = ppi_config
         self.inference_config  = inference_config
+        self.ligand_features = ligand_features
 
         self.guide_scale = potentials_config.guide_scale
         self.guide_decay = potentials_config.guide_decay
@@ -117,7 +119,7 @@ class PotentialManager:
                 if setting['type'] in potentials.require_hotspot_res:
                     setting.update(hotspot_res_update)
 
-        self.potentials_to_apply = self.initialize_all_potentials(setting_list)
+        self.potentials_to_apply = self.initialize_all_potentials(setting_list, ligand_features)
         self.T = diffuser_config.T
         
     def is_empty(self):
@@ -142,7 +144,7 @@ class PotentialManager:
 
         return setting_dict
 
-    def initialize_all_potentials(self, setting_list):
+    def initialize_all_potentials(self, setting_list, ligand_features=None):
         '''
             Given a list of potential dictionaries where each dictionary defines the configurations for a single potential,
             initialize all potentials and add to the list of potentials to be applies
@@ -165,7 +167,12 @@ class PotentialManager:
                                 'contact_string':self.potentials_config.olig_custom_contact }
                 contact_matrix = make_contact_matrix(**contact_kwargs)
                 kwargs.update({'contact_matrix':contact_matrix})
-
+            
+            if potential_dict['type'] == 'docking_score':
+                if ligand_features is None:
+                    raise ValueError("Featurised ligands must be provided for the 'docking_score' potential.")
+                kwargs.update({'featurised_ligands': ligand_features})
+                print('ligand features have been loaded into potential')
 
             to_apply.append( potentials.implemented_potentials[potential_dict['type']](**kwargs) )
 

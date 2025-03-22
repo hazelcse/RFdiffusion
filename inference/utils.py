@@ -449,6 +449,8 @@ class Denoise:
 
             include_motif_sidechains (bool): Provide sidechains of the fixed motif to the model
 
+            ligand_featuers (torch.tensor): featurised ligand
+
         """
 
         get_allatom = ComputeAllAtomCoords().to(device=xt.device)

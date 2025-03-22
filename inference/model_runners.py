@@ -241,7 +241,7 @@ class Sampler:
         })
         return iu.Denoise(**denoise_kwargs)
 
-    def sample_init(self, return_forward_trajectory=False):
+    def sample_init(self, return_forward_trajectory=False, ligand_features=None):
         """
         Initial features to start the sampling process.
         
@@ -269,7 +269,8 @@ class Sampler:
         self.mappings = self.contig_map.get_mappings()
         self.mask_seq = torch.from_numpy(self.contig_map.inpaint_seq)[None,:]
         self.mask_str = torch.from_numpy(self.contig_map.inpaint_str)[None,:]
-        self.binderlen =  len(self.contig_map.inpaint)     
+        self.binderlen =  len(self.contig_map.inpaint)
+        self.ligand_features = ligand_features  
 
         ####################
         ### Get Hotspots ###
@@ -287,7 +288,8 @@ class Sampler:
                                                   self.diffuser_conf,
                                                   self.inf_conf,
                                                   self.hotspot_0idx,
-                                                  self.binderlen)
+                                                  self.binderlen,
+                                                  self.ligand_features)
 
         ###################################
         ### Initialize other attributes ###
