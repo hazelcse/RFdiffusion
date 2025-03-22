@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np 
+import os
 from util import generate_Cbeta
 
 class DockingScorePredictor(nn.Module):
@@ -52,6 +53,8 @@ class docking_score(Potential):
     def __init__(self, weight=1, ligand_features=None):
         self.weight = weight
         self.ligand_features = ligand_features
+        print(ligand_features)
+        print(os.getcwd())
         self.surrogate_model = torch.load('surrogate_nn.pth').eval()
         print('surrogate model initialised')
 

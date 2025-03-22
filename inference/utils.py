@@ -449,7 +449,7 @@ class Denoise:
 
             include_motif_sidechains (bool): Provide sidechains of the fixed motif to the model
 
-            ligand_featuers (torch.tensor): featurised ligand
+            ligand_features (torch.tensor): featurised ligand
 
         """
 
