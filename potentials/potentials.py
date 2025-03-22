@@ -1,6 +1,29 @@
 import torch
+import torch.nn as nn
+import torch.nn.functional as F
 import numpy as np 
 from util import generate_Cbeta
+
+class DockingScorePredictor(nn.Module):
+    def __init__(self, input_size, hidden_size=128, dropout=0.1, output_size=1):
+        super(DockingScorePredictor, self).__init__()
+        self.fc1 = nn.Linear(input_size, hidden_size)
+        self.bn1 = nn.BatchNorm1d(hidden_size)
+        self.fc2 = nn.Linear(hidden_size, hidden_size)
+        self.bn2 = nn.BatchNorm1d(hidden_size)
+        self.fc3 = nn.Linear(hidden_size, hidden_size // 2)
+        self.bn3 = nn.BatchNorm1d(hidden_size // 2)
+        self.fc4 = nn.Linear(hidden_size // 2, output_size)
+        self.dropout = nn.Dropout(dropout)
+        
+    def forward(self, x):
+        x = F.leaky_relu(self.bn1(self.fc1(x)))
+        x = self.dropout(x)
+        x = F.leaky_relu(self.bn2(self.fc2(x)))
+        x = self.dropout(x)
+        x = F.leaky_relu(self.bn3(self.fc3(x)))
+        x = self.fc4(x)
+        return x
 
 class Potential:
     '''
@@ -20,6 +43,25 @@ class Potential:
                                                      by taking a step along its gradient
         '''
         raise NotImplementedError('Potential compute function was not overwritten')
+
+class docking_score(Potential):
+    '''
+    Docking Score predicted by trained neural network to encourage better binding affinity
+    '''
+
+    def __init__(self, weight=1, ligand_features=None):
+        self.weight = weight
+        self.ligand_features = ligand_features
+        self.surrogate_model = torch.load('surrogate_nn.pth'.eval())
+        print('surrogate model initialised')
+
+    def compute(self, xyz):
+        xyz_flat = xyz.view(-1)
+        combined_input = torch.cat([xyz_flat, self.ligand_features], dim=0)
+        docking_score = self.surrogate_model(combined_input)
+        print(f'Predicted Docking Score: {docking_score}')
+
+        return -1 * docking_score * self.weight 
 
 class monomer_ROG(Potential):
     '''
@@ -718,7 +760,8 @@ implemented_potentials = { 'monomer_ROG':          monomer_ROG,
                            'monomer_contacts':     monomer_contacts,
                            'olig_intra_contacts':  olig_intra_contacts,
                            'olig_contacts':        olig_contacts,
-                           'substrate_contacts':    substrate_contacts}
+                           'substrate_contacts':    substrate_contacts,
+                           'docking_score':    docking_score}
 
 require_binderlen      = { 'binder_ROG',
                            'binder_distance_ReLU',
