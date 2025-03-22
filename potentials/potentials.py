@@ -59,7 +59,7 @@ class docking_score(Potential):
 
     def compute(self, xyz):
         xyz_flat = xyz.view(-1)
-        combined_input = torch.cat([xyz_flat, self.ligand_features], dim=0)
+        combined_input = torch.cat([xyz_flat, self.ligand_features], dim=0).unsqueeze(0)
         docking_score = self.surrogate_model(combined_input)
         print(f'Predicted Docking Score: {docking_score}')
 
