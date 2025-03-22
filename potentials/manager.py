@@ -171,7 +171,7 @@ class PotentialManager:
             if potential_dict['type'] == 'docking_score':
                 if ligand_features is None:
                     raise ValueError("Featurised ligands must be provided for the 'docking_score' potential.")
-                kwargs.update({'featurised_ligands': ligand_features})
+                kwargs.update({'ligand_features': ligand_features})
                 print('ligand features have been loaded into potential')
 
             to_apply.append( potentials.implemented_potentials[potential_dict['type']](**kwargs) )
