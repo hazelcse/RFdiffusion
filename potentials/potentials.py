@@ -52,8 +52,8 @@ class docking_score(Potential):
 
     def __init__(self, weight=1, ligand_features=None):
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        self.weight = weight
-        self.ligand_features = ligand_features
+        self.weight = weight.to(device)
+        self.ligand_features = ligand_features.to(device)
         print(ligand_features)
         self.surrogate_model = torch.load('surrogate_nn.pth').to(device).eval()
         print('surrogate model initialised')
