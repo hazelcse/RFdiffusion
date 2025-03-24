@@ -59,6 +59,7 @@ class docking_score(Potential):
         print('surrogate model initialised')
 
     def compute(self, xyz):
+        xyz = xyz.to(self.ligand_features.device)
         device = xyz.device  # Use the same device as input tensor
         
         assert self.ligand_features.device == device, \
