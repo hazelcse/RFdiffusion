@@ -59,14 +59,23 @@ class docking_score(Potential):
         print('surrogate model initialised')
 
     def compute(self, xyz):
-        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        xyz_flat = xyz.view(-1)
-        combined_input = torch.cat([xyz_flat, self.ligand_features], dim=0).unsqueeze(0).to(device)
-        combined_input = torch.where(torch.isnan(combined_input), torch.tensor(0.0), combined_input).to(device)
-        docking_score = self.surrogate_model(combined_input.to(device))
-        print(f'Predicted Docking Score: {docking_score}')
+        device = xyz.device  # Use the same device as input tensor
+        
+        assert self.ligand_features.device == device, \
+            f"Ligand features on {self.ligand_features.device}, but xyz on {device}"
+        assert next(self.surrogate_model.parameters()).device == device, \
+            f"Model on {next(self.surrogate_model.parameters()).device}, but xyz on {device}"
 
-        return -1 * docking_score * self.weight 
+        xyz_flat = xyz.view(-1)
+        combined_input = torch.cat([xyz_flat, self.ligand_features], dim=0).unsqueeze(0)
+        combined_input = torch.where(
+            torch.isnan(combined_input),
+            torch.tensor(0.0, device=device),  # Critical: specify device here
+            combined_input
+        )
+        docking_score = self.surrogate_model(combined_input)
+        print(f'Predicted Docking Score: {docking_score}')
+        return -1 * docking_score * self.weight
 
 class monomer_ROG(Potential):
     '''
