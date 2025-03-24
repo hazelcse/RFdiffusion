@@ -61,8 +61,8 @@ class docking_score(Potential):
     def compute(self, xyz):
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         xyz_flat = xyz.view(-1)
-        combined_input = torch.cat([xyz_flat, self.ligand_features], dim=0).unsqueeze(0)
-        combined_input = torch.where(torch.isnan(combined_input), torch.tensor(0.0), combined_input)
+        combined_input = torch.cat([xyz_flat, self.ligand_features], dim=0).unsqueeze(0).to(device)
+        combined_input = torch.where(torch.isnan(combined_input), torch.tensor(0.0), combined_input).to(device)
         docking_score = self.surrogate_model(combined_input.to(device))
         print(f'Predicted Docking Score: {docking_score}')
 
